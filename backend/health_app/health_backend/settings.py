@@ -131,6 +131,7 @@ REST_FRAMEWORK = {
     # 默认认证方式：Token认证
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
     ],
     # 默认权限：仅登录用户可访问
     'DEFAULT_PERMISSION_CLASSES': [

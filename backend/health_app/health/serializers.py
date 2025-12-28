@@ -3,48 +3,59 @@ from django.contrib.auth.models import AbstractUser
 from rest_framework import serializers
 
 from . import models
-from .models import SportRecord  # 先导入模型
+from .models import SportRecord, DietRecord, HealthIndex  # 先导入模型
 
 # 获取自定义User模型（如果用Django内置User，这行也兼容）
 User = get_user_model()
 
-# 用户序列化器（注册/返回用户信息用）
-# 用户序列化器（用于API数据转换）
+# ========== 用户序列化器 ==========
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User  # 关联到models.py中的User模型
-        # 指定需要序列化/反序列化的字段（根据需求调整）
+        model = User
+        # 字段仅保留自定义+核心认证字段（AbstractUser内置字段已包含）
         fields = ['id', 'username', 'password', 'phone', 'height', 'weight', 'create_time']
-        # 可选：设置密码字段仅写入（不返回）
-        extra_kwargs = {'password': {'write_only': True}}
+        extra_kwargs = {'password': {'write_only': True}}  # 密码只写不返回
 
-    # 重写create方法，确保密码加密存储（关键！）
+    # 重写create方法：使用AbstractUser内置的create_user（自动加密密码）
     def create(self, validated_data):
+        # 提取密码（AbstractUser的create_user需要单独传密码）
+        password = validated_data.pop('password')
+        # 创建用户（自动加密密码，无需手动set_password）
         user = User.objects.create_user(
             username=validated_data['username'],
-            email=validated_data.get('email', ''),
-            password=validated_data['password']
+            password=password,  # 核心：密码单独传，自动加密
+            **validated_data    # 其他字段（phone/height/weight）
         )
         return user
 
-# 运动记录序列化器
+# ========== 运动记录序列化器（自动关联当前登录用户） ==========
 class SportRecordSerializer(serializers.ModelSerializer):
     class Meta:
         model = SportRecord
-        fields = ('id', 'sport_type', 'duration', 'record_date')
-        extra_kwargs = {'user': {'read_only': True}}  # 用户字段由后端自动关联（避免前端传错）
+        fields = ['id', 'sport_type', 'duration', 'record_date']  # 移除user字段（后端自动关联）
 
-    # 重写创建方法，自动关联当前登录用户（简化版，新手先这样）
+    # 登录后：新增记录时自动关联当前用户（无需前端传user_id）
     def create(self, validated_data):
-        # 这里暂时先手动传user_id（后续登录后优化为自动获取）
-        validated_data['user_id'] = self.context['request'].data.get('user_id')
-        return SportRecord.objects.create(**validated_data)
+        # 从请求上下文获取当前登录用户
+        user = self.context['request'].user
+        # 自动关联用户并创建记录
+        return SportRecord.objects.create(user=user,** validated_data)
 
-
-class User(AbstractUser):
-    # 自定义字段，比如
-    phone = models.CharField(max_length=11, blank=True, verbose_name='手机号')
-
+# （可选）饮食/健康指标序列化器（同运动记录逻辑）
+class DietRecordSerializer(serializers.ModelSerializer):
     class Meta:
-        verbose_name = '用户'
-        verbose_name_plural = '用户'
+        model = DietRecord
+        fields = ['id', 'food_name', 'amount', 'meal_time', 'record_date']
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        return DietRecord.objects.create(user=user, **validated_data)
+
+class HealthIndexSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HealthIndex
+        fields = ['id', 'index_type', 'value', 'record_date']
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        return HealthIndex.objects.create(user=user,** validated_data)

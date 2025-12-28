@@ -1,34 +1,18 @@
-from rest_framework import generics, status, viewsets
+# health/views.py
+from rest_framework import viewsets, generics, status
+from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
+from django.contrib.auth import get_user_model
+from .models import SportRecord, DietRecord, HealthIndex
+from .serializers import (
+    UserSerializer, SportRecordSerializer,
+    DietRecordSerializer, HealthIndexSerializer
+)
 
-from .models import SportRecord, User
-from .serializers import SportRecordSerializer, UserSerializer
+User = get_user_model()
 
-# 运动记录详情视图（修改/删除）
-class SportRecordDetailView(generics.RetrieveUpdateDestroyAPIView):
-    serializer_class = SportRecordSerializer
-    permission_classes = [IsAuthenticated]  # 仅登录用户可操作
-
-    # 只允许操作当前用户的记录（防止越权）
-    def get_queryset(self):
-        return SportRecord.objects.filter(user=self.request.user)
-
-# 运动记录列表+新增接口
-class SportRecordView(generics.ListCreateAPIView):
-    queryset = SportRecord.objects.all()
-    serializer_class = SportRecordSerializer
-
-    # 支持按用户筛选（前端传user_id）
-    def get_queryset(self):
-        user_id = self.request.query_params.get('user_id')
-        if user_id:
-            return SportRecord.objects.filter(user_id=user_id)
-        return SportRecord.objects.all()
-
-# 注册接口
+# ========== 用户注册/登录视图 ==========
 class UserRegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -37,34 +21,58 @@ class UserRegisterView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
-        token, created = Token.objects.get_or_create(user=user)
+        token, _ = Token.objects.get_or_create(user=user)
         return Response({
             'token': token.key,
             'user_id': user.id,
             'username': user.username
         }, status=status.HTTP_201_CREATED)
 
-# 登录接口（获取token）
+# 自定义登录视图（返回更多用户信息）
 class CustomAuthToken(ObtainAuthToken):
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
-        token, created = Token.objects.get_or_create(user=user)
+        token, _ = Token.objects.get_or_create(user=user)
         return Response({
             'token': token.key,
             'user_id': user.id,
             'username': user.username
         })
 
+# ========== 运动记录ViewSet（核心：必须定义queryset） ==========
 class SportRecordViewSet(viewsets.ModelViewSet):
     serializer_class = SportRecordSerializer
-    permission_classes = [IsAuthenticated]  # 仅登录用户可访问
+    # 关键：定义queryset（解决basename报错）
+    queryset = SportRecord.objects.all()
 
-    # 只查询当前登录用户的运动记录
+    # 重写get_queryset：只返回当前登录用户的记录（权限控制）
     def get_queryset(self):
         return SportRecord.objects.filter(user=self.request.user)
 
-    # 新增记录时自动关联当前用户
+    # 重写create：自动关联当前用户
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+# （可选）饮食记录ViewSet
+class DietRecordViewSet(viewsets.ModelViewSet):
+    serializer_class = DietRecordSerializer
+    queryset = DietRecord.objects.all()
+
+    def get_queryset(self):
+        return DietRecord.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+# （可选）健康指标ViewSet
+class HealthIndexViewSet(viewsets.ModelViewSet):
+    serializer_class = HealthIndexSerializer
+    queryset = HealthIndex.objects.all()
+
+    def get_queryset(self):
+        return HealthIndex.objects.filter(user=self.request.user)
+
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
