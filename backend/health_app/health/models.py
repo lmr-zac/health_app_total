@@ -3,15 +3,15 @@ from django.contrib.auth.models import PermissionsMixin
 from django.db import models
 
 # 1. 用户表（账号、密码、身高体重）
-class User(models.Model):
-    username = models.CharField(max_length=50, unique=True, verbose_name="账号")  # 账号唯一
-    password = models.CharField(max_length=100, verbose_name="密码")
+class User(AbstractUser):
+    # 扩展手机号字段（AbstractUser已包含username、password等基础字段）
+    phone = models.CharField(max_length=11, blank=True, verbose_name='手机号')
     height = models.FloatField(default=0.0, verbose_name="身高(cm)")
     weight = models.FloatField(default=0.0, verbose_name="体重(kg)")
     create_time = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
 
     class Meta:
-        db_table = "user"  # 数据库表名不变，仍为user
+        db_table = "user"
         verbose_name = "用户"
         verbose_name_plural = verbose_name
 

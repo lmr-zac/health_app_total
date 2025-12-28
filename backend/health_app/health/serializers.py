@@ -9,13 +9,14 @@ from .models import SportRecord  # 先导入模型
 User = get_user_model()
 
 # 用户序列化器（注册/返回用户信息用）
+# 用户序列化器（用于API数据转换）
 class UserSerializer(serializers.ModelSerializer):
-    # 注册时需要密码，且返回时隐藏
-    password = serializers.CharField(write_only=True)
-
     class Meta:
-        model = User
-        fields = ['id', 'username', 'password', 'email']  # 按你的自定义User模型字段调整
+        model = User  # 关联到models.py中的User模型
+        # 指定需要序列化/反序列化的字段（根据需求调整）
+        fields = ['id', 'username', 'password', 'phone', 'height', 'weight', 'create_time']
+        # 可选：设置密码字段仅写入（不返回）
+        extra_kwargs = {'password': {'write_only': True}}
 
     # 重写create方法，确保密码加密存储（关键！）
     def create(self, validated_data):
