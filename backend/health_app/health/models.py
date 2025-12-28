@@ -1,3 +1,5 @@
+from django.contrib.auth.base_user import BaseUserManager, AbstractBaseUser
+from django.contrib.auth.models import PermissionsMixin
 from django.db import models
 
 # 1. 用户表（账号、密码、身高体重）
@@ -52,4 +54,39 @@ class HealthIndex(models.Model):
     class Meta:
         db_table = "health_index"
         verbose_name = "健康指标"
+        verbose_name_plural = verbose_name
+
+# 1. 用户管理器（必须定义，用于创建用户和超级用户）
+class UserManager(BaseUserManager):
+    def create_user(self, username, password=None, **extra_fields):
+        if not username:
+            raise ValueError('必须设置用户名')
+        user = self.model(username=username,** extra_fields)
+        user.set_password(password)  # 加密存储密码
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, username, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        return self.create_user(username, password,** extra_fields)
+
+# 2. 用户表（继承认证基类）
+class User(AbstractBaseUser, PermissionsMixin):  # 修改继承
+    username = models.CharField(max_length=50, unique=True, verbose_name="账号")
+    password = models.CharField(max_length=100, verbose_name="密码")  # 可保留，或通过AbstractBaseUser的set_password处理
+    height = models.FloatField(default=0.0, verbose_name="身高(cm)")
+    weight = models.FloatField(default=0.0, verbose_name="体重(kg)")
+    create_time = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
+    is_active = models.BooleanField(default=True, verbose_name="是否激活")  # 新增：认证必要字段
+    is_staff = models.BooleanField(default=False, verbose_name="是否为管理员")  # 新增：控制后台访问权限
+
+    # 认证系统必要配置
+    objects = UserManager()  # 关联用户管理器
+    USERNAME_FIELD = 'username'  # 登录时使用的字段（这里是username）
+    REQUIRED_FIELDS = []  # 解决报错的核心：定义必要字段（根据需要添加，如邮箱等）
+
+    class Meta:
+        db_table = "user"
+        verbose_name = "用户"
         verbose_name_plural = verbose_name
