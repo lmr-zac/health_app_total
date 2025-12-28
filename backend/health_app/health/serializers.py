@@ -1,5 +1,8 @@
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AbstractUser
 from rest_framework import serializers
+
+from . import models
 from .models import SportRecord  # 先导入模型
 
 # 获取自定义User模型（如果用Django内置User，这行也兼容）
@@ -35,3 +38,12 @@ class SportRecordSerializer(serializers.ModelSerializer):
         # 这里暂时先手动传user_id（后续登录后优化为自动获取）
         validated_data['user_id'] = self.context['request'].data.get('user_id')
         return SportRecord.objects.create(**validated_data)
+
+
+class User(AbstractUser):
+    # 自定义字段，比如
+    phone = models.CharField(max_length=11, blank=True, verbose_name='手机号')
+
+    class Meta:
+        verbose_name = '用户'
+        verbose_name_plural = '用户'

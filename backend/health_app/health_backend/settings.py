@@ -125,7 +125,7 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-AUTH_USER_MODEL = 'health.User'  # 指定自定义User为默认用户模型。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。
+AUTH_USER_MODEL = 'health.User'  # 指定自定义User为默认用户模型
 
 REST_FRAMEWORK = {
     # 默认认证方式：Token认证

@@ -7,6 +7,14 @@ from rest_framework.response import Response
 from .models import SportRecord, User
 from .serializers import SportRecordSerializer, UserSerializer
 
+# 运动记录详情视图（修改/删除）
+class SportRecordDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = SportRecordSerializer
+    permission_classes = [IsAuthenticated]  # 仅登录用户可操作
+
+    # 只允许操作当前用户的记录（防止越权）
+    def get_queryset(self):
+        return SportRecord.objects.filter(user=self.request.user)
 
 # 运动记录列表+新增接口
 class SportRecordView(generics.ListCreateAPIView):
