@@ -1,0 +1,9 @@
+# Django
+__pycache__/
+.venv/
+db.sqlite3
+# Android
+build/
+.gradle/
+.idea/
+*.iml
