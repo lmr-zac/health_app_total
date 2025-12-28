@@ -1,9 +1,131 @@
-# Django
+# ==================== 通用 Python 规则（来自远程） ====================
+# 字节编译文件
 __pycache__/
-.venv/
-db.sqlite3
-# Android
+*.py[codz]
+*$py.class
+
+# C 扩展
+*.so
+
+# 打包/分发文件
+.Python
 build/
-.gradle/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# 安装日志
+pip-log.txt
+pip-delete-this-directory.txt
+
+# 测试/覆盖率报告
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py.cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# 翻译文件
+*.mo
+*.pot
+
+# Flask 相关
+instance/
+.webassets-cache
+
+# Scrapy 相关
+.scrapy
+
+# Sphinx 文档
+docs/_build/
+
+# PyBuilder
+.pybuilder/
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# 虚拟环境
+.env
+.envrc
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.pixi
+
+# PEP 582
+__pypackages__/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath
+*.sage.py
+
+# 编辑器/IDE 配置
+.spyderproject
+.spyproject
+.ropeproject
 .idea/
-*.iml
+*.iml  # Android Studio/IDEA 专属
+.vscode/
+.ruff_cache/
+.pypirc
+.cursorignore
+.cursorindexingignore
+
+# 其他工具
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+cython_debug/
+marimo/_static/
+marimo/_lsp/
+__marimo__/
+.pdm-python
+.pdm-build/
+
+# ==================== Django 专属规则（本地+远程合并） ====================
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# ==================== Android 专属规则（仅本地有，保留） ====================
+.gradle/
