@@ -1,7 +1,8 @@
 # health/serializers.py
-from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import SportRecord, DietRecord, HealthIndex
+from rest_framework import serializers
+from .models import User, SportRecord, HealthIndex, DietRecord  # 确保导入了SportRecord模型
+
 
 User = get_user_model()
 
@@ -19,3 +20,33 @@ class UserSerializer(serializers.ModelSerializer):
         user.set_password(password)  # 加密密码（核心）
         user.save()  # 保存密码修改
         return user
+
+# 补充运动记录序列化器（关键缺失部分）
+class SportRecordSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SportRecord  # 关联到models.py中的SportRecord模型
+        # 根据你的SportRecord模型实际字段调整fields
+        fields = ['id', 'user', 'sport_type', 'duration',  'record_date']  # 示例字段，需与模型一致
+        
+# ========== 【新增】健康指标序列化器（如果views.py导入了，必须定义） ==========
+class HealthIndexSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HealthIndex  # 关联models.py的HealthIndex模型
+        fields = ['id', 'index_type', 'value', 'record_date']  # 匹配模型字段
+        extra_kwargs = {'user': {'read_only': True}}
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        return HealthIndex.objects.create(user=user,** validated_data)
+
+
+# ========== 饮食记录序列化器（必须完整定义，不能只写pass） ==========
+class DietRecordSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DietRecord  # 关联models.py的DietRecord模型
+        fields = ['id', 'food_name', 'amount', 'meal_time', 'record_date']  # 匹配模型字段
+        extra_kwargs = {'user': {'read_only': True}}
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        return DietRecord.objects.create(user=user, **validated_data)
