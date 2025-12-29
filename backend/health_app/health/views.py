@@ -1,5 +1,6 @@
 # health/views.py
 from rest_framework import viewsets, generics, status
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
@@ -16,6 +17,7 @@ User = get_user_model()
 class UserRegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    permission_classes = [AllowAny]  # 关键：允许匿名用户注册
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -30,6 +32,7 @@ class UserRegisterView(generics.CreateAPIView):
 
 # 自定义登录视图（返回更多用户信息）
 class CustomAuthToken(ObtainAuthToken):
+    permission_classes = [AllowAny]  # 关键：允许匿名用户登录
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
